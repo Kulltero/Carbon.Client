@@ -4,6 +4,7 @@ using BepInEx;
 using BepInEx.Unity.IL2CPP;
 using BepInEx.Unity.IL2CPP.Utils;
 using Carbon.Client;
+using Carbon.Client.Base;
 using HarmonyLib;
 using UnityEngine;
 
@@ -54,6 +55,8 @@ public class Entrypoint : BasePlugin
 			try
 			{
 				Debug.Log($"Booting Carbon client...");
+
+				BaseHook.Rebuild();
 
 				await References.Load();
 

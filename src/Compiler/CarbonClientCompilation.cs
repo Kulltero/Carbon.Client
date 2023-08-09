@@ -157,7 +157,7 @@ public class CompileThread : BaseThreadedJob
 
 				if (CarbonClientPlugin.Plugins.TryGetValue(attribute.Name, out var existent))
 				{
-					existent.Unload();
+					existent.IUnload();
 				}
 
 				Debug.Log($"Loaded plugin {attribute.Name} [{CompileTime} ms]");
@@ -166,6 +166,9 @@ public class CompileThread : BaseThreadedJob
 				instance.Info = attribute;
 				instance.Info.FilePath = FilePath;
 				instance.Info.MD = CompilerHelper.GetMD(info.LastWriteTime.ToString());
+				instance._pluginType = type;
+				instance.ILoad();
+
 				try
 				{
 					instance.OnInit();
@@ -211,7 +214,7 @@ public class CompilerHelper
 
 				if (newMD != existentPlugin.Info.MD)
 				{
-					existentPlugin.Unload(true);
+					existentPlugin.IUnload(true);
 					_fileQueue.Enqueue(existentPlugin.Info.FilePath);
 					continue;
 				}
@@ -234,7 +237,7 @@ public class CompilerHelper
 
 			if (!exists)
 			{
-				plugin.Unload(true);
+				plugin.IUnload(true);
 				continue;
 			}
 

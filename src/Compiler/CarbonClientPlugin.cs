@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using Carbon.Client.Base;
 using UnityEngine;
 
 /*
@@ -15,6 +19,10 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 {
 	internal static Dictionary<string, CarbonClientPlugin> Plugins = new();
 
+	internal Dictionary<string, Func<object[], object>> _hooks = new();
+	internal Type _pluginType;
+	internal const BindingFlags _flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
 	public Info Info { get; set; }
 
 	public void Log(object message)
@@ -22,6 +30,15 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 		Debug.Log($"[{Info.Name}] {message}");
 	}
 
+	public object CallHook(string hook, object[] args)
+	{
+		if(_hooks.TryGetValue(hook, out var func))
+		{
+			return func(args);
+		}
+
+		return default;
+	}
 	public T GetComponentImpl<T>() where T : Component
 	{
 		return GetComponent<T>();
@@ -35,8 +52,15 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 		return $"{Info.Name}";
 	}
 
-	internal void Unload(bool clear = false)
+	internal void ILoad()
 	{
+		IInstallHooks();
+
+	}
+	internal void IUnload(bool clear = false)
+	{
+		BaseHook.UnsubscribePlugin(this);
+
 		Console.WriteLine($"Unloaded plugin {Info.Name}");
 
 		if (clear) Plugins.Remove(Info.Name);
@@ -53,5 +77,22 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 			DestroyImmediate(this);
 		}
 		catch { }
+	}
+
+	internal void IInstallHooks()
+	{
+		_hooks.Clear();
+
+		foreach (var method in _pluginType.GetMethods(_flags))
+		{
+			var name = method.Name;
+
+			if (BaseHook.Exists(name, out var hook))
+			{
+				hook.Subscribe(this);
+
+				_hooks.Add(name, args => method.Invoke(this, args));
+			}
+		}
 	}
 }

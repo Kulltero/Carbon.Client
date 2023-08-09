@@ -1,23 +1,26 @@
 ﻿using System;
+using Carbon.Client.API;
+using Carbon.Client.Base;
 using HarmonyLib;
-using UnityEngine;
 
 namespace Carbon.Client.Hooks;
 
 [HarmonyPatch(typeof(MainMenuSystem), "Show", new Type[] { })]
+[Hook("OnMenuShow")]
 public class OnMenuShow
 {
 	public async static void Prefix()
 	{
-		Debug.Log($"Show!");
+		HookCaller.CallHook("OnMenuShow", MainMenuSystem.Instance);
 	}
 }
 
 [HarmonyPatch(typeof(MainMenuSystem), "Hide", new Type[] { })]
+[Hook("OnMenuHide")]
 public class OnMenuHide
 {
 	public async static void Prefix()
 	{
-		Debug.Log($"Hide!");
+		HookCaller.CallHook("OnMenuHide", MainMenuSystem.Instance);
 	}
 }
