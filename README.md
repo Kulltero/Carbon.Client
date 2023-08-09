@@ -3,7 +3,7 @@
 </p>
 <hr />
 
-We're introducing Carbon for client, which is a tool designed to allow developers to go wild and explore Rust client-side features and communicate with the server.
+We're introducing <b>Carbon for client</b>, which is a tool designed to allow developers to go wild and explore Rust client-side features and communicate with the server.
 
 ## Features
 
@@ -20,7 +20,15 @@ One other downside is the way it's shipped and the way you can enable/disable Ca
 
 ## Installation
 
-TBA.
+Unzip the release patch in the root of your client. 
+
+![image](https://github.com/CarbonCommunity/Carbon.Client/assets/22857337/abe3293f-a5cc-418c-a9ed-2b3427d65d4c)
+
+
+<b>Very important to note:</b> run <b>RustClient.exe</b> and not through Steam. Nothing bad will happen, it'll just not start, by throwing this error:
+
+![image](https://github.com/CarbonCommunity/Carbon.Client/assets/22857337/dd9ea3d5-e6cd-4bf7-b700-5aa6f7e5dec0)
+
 
 ## Uninstallation
 
