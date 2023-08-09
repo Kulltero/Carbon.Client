@@ -25,7 +25,7 @@ Unzip the release patch in the root of your client.
 ![image](https://github.com/CarbonCommunity/Carbon.Client/assets/22857337/abe3293f-a5cc-418c-a9ed-2b3427d65d4c)
 
 
-<b>Very important to note:</b> run <b>RustClient.exe</b> and not through Steam. Nothing bad will happen, it'll just not start, by throwing this error:
+<b>Very important to note:</b> run <b>RustClient.exe</b> and not through Steam or Rust.exe. Nothing bad will happen, it'll just not start, by throwing this error:
 
 ![image](https://github.com/CarbonCommunity/Carbon.Client/assets/22857337/dd9ea3d5-e6cd-4bf7-b700-5aa6f7e5dec0)
 
