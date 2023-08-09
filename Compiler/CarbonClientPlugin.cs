@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 /*
@@ -18,11 +15,16 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 {
 	internal static Dictionary<string, CarbonClientPlugin> Plugins = new();
 
-	public Info Info { get; set; } = null;
+	public Info Info { get; set; }
 
 	public void Log(object message)
 	{
 		Debug.Log($"[{Info.Name}] {message}");
+	}
+
+	public T GetComponentImpl<T>() where T : Component
+	{
+		return GetComponent<T>();
 	}
 
 	public abstract void OnInit();
@@ -33,7 +35,7 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 		return $"{Info.Name}";
 	}
 
-	public void Unload(bool clear = false)
+	internal void Unload(bool clear = false)
 	{
 		Console.WriteLine($"Unloaded plugin {Info.Name}");
 

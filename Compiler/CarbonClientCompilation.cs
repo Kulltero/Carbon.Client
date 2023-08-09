@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Carbon.Base;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis;
-using System.Reflection;
-using System.IO;
 using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using Carbon.Base;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
-using System.Globalization;
 
 /*
  *
@@ -20,13 +20,15 @@ using System.Globalization;
 
 namespace Carbon.Client;
 
+#pragma warning disable CS8618
+
 public class CompileThread : BaseThreadedJob
 {
 	public string FileName { get; set; }
 	public string FilePath { get; set; }
 	public string Source { get; set; }
 	public float CompileTime { get; set; }
-	public string MD { get; set; }
+	public string Hash { get; set; }
 
 	public Assembly Assembly { get; set; }
 
@@ -41,7 +43,6 @@ public class CompileThread : BaseThreadedJob
 		var loadedHarmony0 = false;
 
 		LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "system-libs"));
-		LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "unity-libs"));
 		LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "plugins"));
 		LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "core"));
 		LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "interop"));
@@ -71,7 +72,7 @@ public class CompileThread : BaseThreadedJob
 					{
 						var reference = MetadataReference.CreateFromStream(stream, filePath: file);
 						references.Add(reference);
-						Debug.Log($"Loading reference: {reference.Display}");
+						Debug.Log($"Loading reference: {Path.GetFileName(reference.Display)}");
 					}
 
 					Array.Clear(source, 0, source.Length);
@@ -174,7 +175,7 @@ public class CompileThread : BaseThreadedJob
 					instance.Log($"Failed OnInit: {ex}");
 				}
 
-				CarbonClientPlugin.Plugins [attribute.Name] = instance;
+				CarbonClientPlugin.Plugins[attribute.Name] = instance;
 			}
 		}
 	}
@@ -223,7 +224,7 @@ public class CompilerHelper
 		}
 
 		var pool = new List<CarbonClientPlugin>();
-		foreach (var plugin in CarbonClientPlugin.Plugins ) pool.Add(plugin.Value);
+		foreach (var plugin in CarbonClientPlugin.Plugins) pool.Add(plugin.Value);
 
 		foreach (var plugin in pool)
 		{
@@ -261,17 +262,18 @@ public class CompilerHelper
 			{
 				Fetch();
 			}
-			catch (Exception ex) { Debug.LogWarning($"Refresh: {ex}"); }
+			catch (Exception ex) { Debug.LogWarning($"Fetch failed ({ex.Message})\n{ex.StackTrace}"); }
 
 			yield return _wfs;
 
 			if (_fileQueue.Count != 0)
 			{
+				var file = _fileQueue.Dequeue();
 				try
 				{
-					Compile(_fileQueue.Dequeue());
+					Compile(file);
 				}
-				catch (Exception ex) { Debug.LogWarning($"Compile: {ex}"); }
+				catch (Exception ex) { Debug.LogWarning($"Compilation failed for '{file}' ({ex.Message})\n{ex.StackTrace}"); }
 				continue;
 			}
 
@@ -309,7 +311,7 @@ public class CompilerHelper
 			Source = source,
 			FileName = FormatName(Path.GetFileNameWithoutExtension(file)),
 			FilePath = file,
-			MD = md
+			Hash = md
 		};
 		thread.Start();
 	}

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using Carbon.Extensions;
 using Microsoft.CodeAnalysis;
 
 namespace Carbon.Client
@@ -11,7 +13,7 @@ namespace Carbon.Client
 	{
 		internal static bool initedReferences = false;
 
-		public static void Load()
+		public static async Task Load()
 		{
 			if (initedReferences) return;
 			initedReferences = true;
@@ -25,7 +27,7 @@ namespace Carbon.Client
 			// LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "core"));
 			// LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "interop"));
 
-			void LoadFolder(string folder)
+			async void LoadFolder(string folder)
 			{
 				folder = Path.GetFullPath(folder);
 
@@ -53,6 +55,8 @@ namespace Carbon.Client
 						source = null;
 					}
 					catch { }
+
+					await AsyncEx.WaitForSeconds(0.1f);
 				}
 			}
 		}

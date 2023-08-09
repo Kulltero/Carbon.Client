@@ -1,6 +1,8 @@
 @echo off
 
-git clone "https://github.com/CarbonCommunity/Carbon.Core.git" ".env\Carbon
+if not exist ".env/Carbon" (
+	git clone "https://github.com/CarbonCommunity/Carbon.Core.git" ".env\Carbon"
+)
 git fetch
 git pull
 

@@ -1,22 +1,11 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using BepInEx;
-using HarmonyLib;
 using BepInEx.Unity.IL2CPP;
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 using BepInEx.Unity.IL2CPP.Utils;
-using Carbon.Base;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis;
-using System;
-using System.Reflection;
-using System.Linq;
-using Il2CppSystem.Security.Cryptography;
-using System.Text;
-using System.Globalization;
-using VLB;
 using Carbon.Client;
+using HarmonyLib;
+using UnityEngine;
 
 /*
  *
@@ -47,35 +36,41 @@ public class Entrypoint : BasePlugin
 		harmony.PatchAll();
 
 		CompilerHelper.PluginsFolder = System.IO.Path.Combine(UnityEngine.Application.dataPath, "..", "BepInEx", "carbon");
-		if (!Directory.Exists(CompilerHelper.PluginsFolder)) Directory.CreateDirectory(CompilerHelper.PluginsFolder );
+		if (!Directory.Exists(CompilerHelper.PluginsFolder)) Directory.CreateDirectory(CompilerHelper.PluginsFolder);
 	}
 
-	[HarmonyPatch(typeof(global::Client), "NetworkInit")]
-	public class MyClass_MyMethod_Patch
+	public class Persistence : FacepunchBehaviour
 	{
-		public static void Postfix(global::Client __instance)
+
+	}
+
+	[HarmonyPatch(typeof(MainMenuSystem), "Awake", new Type[] { })]
+	public class Initial
+	{
+		public async static void Prefix()
 		{
 			if (_hasInit) return;
 			_hasInit = true;
-
-			References.Load(); 
-
 			try
 			{
+				Debug.Log($"Booting Carbon client...");
+
+				await References.Load();
+
 				CarbonCommunityEntity.Init();
 
-				var ent = new GameObject(CarbonCommunityEntity.PrefabName).AddComponent<CarbonCommunityEntity>();
-				ent.prefabID = CarbonCommunityEntity.PrefabId;
-				ent._prefabName = CarbonCommunityEntity.PrefabName;
-				FileSystem.Backend.cache.TryAdd(CarbonCommunityEntity.PrefabName, ent.gameObject);
+				// var ent = new GameObject(CarbonCommunityEntity.PrefabName).AddComponent<CarbonCommunityEntity>();
+				// ent.prefabID = CarbonCommunityEntity.PrefabId;
+				// ent._prefabName = CarbonCommunityEntity.PrefabName;
+				// FileSystem.Backend.cache.TryAdd(CarbonCommunityEntity.PrefabName, ent.gameObject);
+
+				Debug.Log($"Initializing compiler...");
+				IL2CPPChainloader.AddUnityComponent<Persistence>().StartCoroutine(CompilerHelper.CompileRoutine());
 			}
 			catch (Exception ex)
 			{
-				Debug.LogError($"Failed CarbonCommunityEntity init: {ex}");
+				Debug.LogError($"Failed CarbonCommunityEntity init ({ex.Message})\n{ex.StackTrace}");
 			}
-
-			Debug.Log($"Initializing compiler...");
-			__instance.StartCoroutine(CompilerHelper.CompileRoutine());
 		}
 	}
 }
