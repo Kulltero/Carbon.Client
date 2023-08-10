@@ -6,6 +6,7 @@ using BepInEx.Unity.IL2CPP.Utils;
 using Carbon.Client;
 using Carbon.Client.API;
 using Carbon.Client.Base;
+using Carbon.Client.Core;
 using HarmonyLib;
 using UnityEngine;
 
@@ -58,6 +59,7 @@ public class Entrypoint : BasePlugin
 				Debug.Log($"Booting Carbon client...");
 
 				HookLoader.Reload();
+				HookLoader.Patch();
 				BaseHook.Rebuild();
 
 				await References.Load();
@@ -68,6 +70,14 @@ public class Entrypoint : BasePlugin
 				// ent.prefabID = CarbonCommunityEntity.PrefabId;
 				// ent._prefabName = CarbonCommunityEntity.PrefabName;
 				// FileSystem.Backend.cache.TryAdd(CarbonCommunityEntity.PrefabName, ent.gameObject);
+
+				var corePlugin = new CorePlugin()
+				{
+					_pluginType = typeof(CorePlugin)
+				};
+				CarbonClientPlugin.Plugins.Add("Core", corePlugin);
+				corePlugin.ILoad();
+				corePlugin.OnInit();
 
 				Debug.Log($"Initializing compiler...");
 				IL2CPPChainloader.AddUnityComponent<Persistence>().StartCoroutine(CompilerHelper.CompileRoutine());

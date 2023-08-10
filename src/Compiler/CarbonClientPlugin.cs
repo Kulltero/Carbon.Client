@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Carbon.Client.API;
 using Carbon.Client.Base;
 using UnityEngine;
 
@@ -67,11 +68,12 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 
 	internal void ILoad()
 	{
-		IInstallHooks();
-
+		IRefreshHooks();
+		ICommandInstall();
 	}
 	internal void IUnload(bool clear = false)
 	{
+		CommandLoader.UnregisterType(this);
 		BaseHook.UnsubscribePlugin(this);
 
 		Console.WriteLine($"Unloaded plugin {Info.Name}");
@@ -92,7 +94,7 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 		catch { }
 	}
 
-	internal void IInstallHooks()
+	internal void IRefreshHooks()
 	{
 		_hooks.Clear();
 
@@ -107,5 +109,9 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 				_hooks.Add(name, args => method.Invoke(this, args));
 			}
 		}
+	}
+	internal void ICommandInstall()
+	{
+		CommandLoader.RegisterType(_pluginType, this);
 	}
 }

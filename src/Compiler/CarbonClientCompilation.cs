@@ -160,7 +160,7 @@ public class CompileThread : BaseThreadedJob
 					existent.IUnload();
 				}
 
-				Debug.Log($"Loaded plugin {attribute.Name} [{CompileTime} ms]");
+				Console.WriteLine($"Loaded plugin {attribute.Name}");
 
 				var instance = Activator.CreateInstance(type) as CarbonClientPlugin;
 				instance.Info = attribute;
@@ -231,6 +231,8 @@ public class CompilerHelper
 
 		foreach (var plugin in pool)
 		{
+			if (plugin.Info == null) continue;
+
 			if (_fileQueue.Contains(plugin.Info.FilePath)) continue;
 
 			var exists = File.Exists(plugin.Info.FilePath);

@@ -21,3 +21,15 @@ public class Info : Attribute
 		Name = CompilerHelper.FormatName(name);
 	}
 }
+
+[AttributeUsage(AttributeTargets.Method)]
+public class CommandAttribute : Attribute
+{
+	public string Name { get; set; }
+
+	public CommandAttribute() { }
+	public CommandAttribute(string name)
+	{
+		Name = name;
+	}
+}

@@ -50,6 +50,11 @@ public class BaseHook : IDisposable
 				Debug.Log($"Installed hook: {attribute.Name}");
 			}
 		}
+
+		foreach(var plugin in CarbonClientPlugin.Plugins)
+		{
+			plugin.Value.IRefreshHooks();
+		}
 	}
 
 	internal List<CarbonClientPlugin> _subscribers = new();
@@ -71,7 +76,7 @@ public class BaseHook : IDisposable
 			}
 			catch (Exception ex)
 			{
-				Debug.LogError($"Failed calling hook '{Name}' on {subscriber.Info.Name} ({ex.Message})\n{ex.StackTrace}");
+				Debug.LogError($"Failed calling hook '{Name}' {(subscriber.Info != null ? $"on {subscriber.Info?.Name}" : string.Empty)}({ex.Message})\n{ex.StackTrace}");
 			}
 		}
 
