@@ -171,7 +171,7 @@ using HarmonyLib;
 [Hook(""{HookName}"")]
 public class {HookName}_{Guid.NewGuid():N}
 {{
-	public static {(method.ReturnType == typeof(void) && !ReturnNonNull ? "void" : "bool")} {(IsPostfix ? "Postfix" : "Prefix")}({parameters})
+	public static {(method.ReturnType == typeof(void) && !ReturnNonNull ? "void" : "bool")} {(IsPostfix && !ReturnNonNull ? "Postfix" : "Prefix")}({parameters})
 	{{
 		{(string.IsNullOrEmpty(PatchReturnType) && !ReturnNonNull ? @$"HookCaller.CallHook(""{HookName}"", {HookParameters.ToString(", ")});" :
 		$@"
