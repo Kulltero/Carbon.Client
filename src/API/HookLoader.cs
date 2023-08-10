@@ -101,6 +101,7 @@ using HarmonyLib;
 			public string HookName { get; set; }
 			public string[] HookParameters { get; set; }
 
+			public bool ReturnNonNull { get; set; }
 			public string PatchType { get; set; }
 			public string PatchMethod { get; set; }
 			public string PatchReturnType { get; set; }
@@ -163,18 +164,20 @@ using HarmonyLib;
 				if (!method.IsStatic) parameters += $", {type.FullName} __instance";
 				if (method.ReturnType != typeof(void)) parameters += $", ref {method.ReturnType.FullName} __result";
 
+				var isVoid = method.ReturnType == typeof(void);
+
 				return @$"
 [HarmonyPatch(typeof({type.FullName}), ""{PatchMethod}"", new Type[] {{ {types.Select(x => $"typeof({x.FullName})").ToString(", ")} }})]
 [Hook(""{HookName}"")]
 public class {HookName}_{Guid.NewGuid():N}
 {{
-	public static {(method.ReturnType == typeof(void) ? "void" : "bool")} {(IsPostfix ? "Postfix" : "Prefix")}({parameters})
+	public static {(method.ReturnType == typeof(void) && !ReturnNonNull ? "void" : "bool")} {(IsPostfix ? "Postfix" : "Prefix")}({parameters})
 	{{
-		{(string.IsNullOrEmpty(PatchReturnType) ? @$"HookCaller.CallHook(""{HookName}"", {HookParameters.ToString(", ")});" :
+		{(string.IsNullOrEmpty(PatchReturnType) && !ReturnNonNull ? @$"HookCaller.CallHook(""{HookName}"", {HookParameters.ToString(", ")});" :
 		$@"
-		if (HookCaller.CallHook(""{HookName}"", {HookParameters.ToString(", ")}) is {method.ReturnType.FullName} value)
-		{{
-			__result = value;
+		if (HookCaller.CallHook(""{HookName}"", {HookParameters.ToString(", ")}) {(isVoid ? "!= null" : $"is {method.ReturnType.FullName} value" )})
+		{{{(isVoid ? "" :
+"\n			__result = value;")}
 			return true;
 		}}
 
