@@ -15,7 +15,7 @@ public partial class CorePlugin : CarbonClientPlugin
 	[Command("c.find")]
 	public string Find(string[] args)
 	{
-		return CommandLoader.Commands.Where(x => x.Name.Contains(args.ToString(" "))).Select(x => $" {x.Name} (by {x.Plugin.Info?.Name})").ToString("\n");
+		return CommandLoader.Commands.Where(x => x.Name.Contains(args.ToString(" "))).Select(x => $" {x.Name}{(x.Plugin.Info == null ? string.Empty : $" ({x.Plugin.Info.Name})")}").ToString("\n");
 	}
 
 	[Command("c.reloadhooks")]

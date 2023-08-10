@@ -46,8 +46,6 @@ public class BaseHook : IDisposable
 				{
 					Name = attribute.Name,
 				});
-
-				Debug.Log($"Installed hook: {attribute.Name}");
 			}
 		}
 

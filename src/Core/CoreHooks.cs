@@ -21,8 +21,11 @@ public partial class CorePlugin : CarbonClientPlugin
 		{
 			try
 			{
+				ui.Log($"<color=orange>></color> {input}");
+
 				var result = command.Callback.Invoke(commandArgs);
 				if (!string.IsNullOrEmpty(result)) ui.Log(result);
+
 				ui.inputField.ActivateInputField();
 				ui.inputField.Select();
 			}

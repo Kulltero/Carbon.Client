@@ -22,11 +22,18 @@ public class HookLoader
 		return AccessTools.TypeByName(type);
 	}
 
+	public static string GetHookFile()
+	{
+		return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "BepInEx", "plugins", "carbonc.json"));
+	}
+
 	public static void Reload()
 	{
-		var path = Path.Combine(Application.dataPath, "..", "BepInEx", "plugins", "carbonc.json");
+		var path = GetHookFile();
 		try
 		{
+			Debug.Log($"Loading hooks from file '{path}'");
+
 			Current = JsonConvert.DeserializeObject<Manifest>(File.ReadAllText(path));
 			Current.Validate();
 		}
@@ -50,7 +57,7 @@ public class HookLoader
 
 	public static void Save()
 	{
-		var path = Path.Combine(Application.dataPath, "..", "BepInEx", "plugins", "carbonc.json");
+		var path = GetHookFile();
 		File.WriteAllText(path, JsonConvert.SerializeObject(Current, Formatting.Indented));
 	}
 
