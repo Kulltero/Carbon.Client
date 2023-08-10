@@ -9,7 +9,7 @@ namespace Carbon.Client.Hooks;
 [Hook("OnMenuShow")]
 public class OnMenuShow
 {
-	public async static void Prefix()
+	public static void Prefix()
 	{
 		HookCaller.CallHook("OnMenuShow", MainMenuSystem.Instance);
 	}
@@ -19,7 +19,7 @@ public class OnMenuShow
 [Hook("OnMenuHide")]
 public class OnMenuHide
 {
-	public async static void Prefix()
+	public static void Prefix()
 	{
 		HookCaller.CallHook("OnMenuHide", MainMenuSystem.Instance);
 	}

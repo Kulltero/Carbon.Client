@@ -23,6 +23,19 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 	internal Type _pluginType;
 	internal const BindingFlags _flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
+	public static void UnloadAll()
+	{
+		var temp = Plugins.Values.ToArray();
+
+		foreach (var plugin in temp)
+		{
+			plugin.IUnload(true);
+		}
+
+		Array.Clear(temp, 0, temp.Length);
+		temp = null;
+	}
+
 	public Info Info { get; set; }
 
 	public void Log(object message)
