@@ -13,6 +13,8 @@ namespace Carbon.Client.API;
 
 public class HookLoader
 {
+	public static Harmony CurrentPatch { get; internal set; }
+
 	public static Manifest Current { get; internal set; }
 
 	public static Type FindType(string type)
@@ -32,6 +34,18 @@ public class HookLoader
 		{
 			Debug.LogError($"Failed loading hooks from file '{path}' ({ex.Message}\n{ex.StackTrace}");
 		}
+	}
+
+	public static void Patch()
+	{
+		var thread = new CarbonHookCompilation()
+		{
+			Source = Current.CreatePatch(),
+			FileName = Guid.NewGuid().ToString("N"),
+			FilePath = string.Empty,
+			Hash = string.Empty
+		};
+		thread.Start();
 	}
 
 	public static void Save()
@@ -89,12 +103,14 @@ using HarmonyLib;
 
 			public string PatchType { get; set; }
 			public string PatchMethod { get; set; }
-			public string PatchReturnType{ get; set; }
-			public bool IsPostfix { get; set; }
+			public string PatchReturnType { get; set; }
 			public string[] PatchParameters { get; set; }
 
 			[JsonIgnore]
 			public bool IsInvalid { get; set; }
+
+			[JsonIgnore]
+			public bool IsPostfix => string.IsNullOrEmpty(PatchReturnType);
 
 			internal Harmony _patch;
 

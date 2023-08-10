@@ -26,7 +26,7 @@ public class BaseHook : IDisposable
 		}
 	}
 
-	public static void Rebuild()
+	public static void Rebuild(params Assembly[] assemblies)
 	{
 		foreach (var hook in _cache.Values)
 		{
@@ -35,18 +35,20 @@ public class BaseHook : IDisposable
 
 		_cache.Clear();
 
-		var assembly = typeof(BaseHook).Assembly;
-		foreach (var type in assembly.GetTypes())
+		foreach (var assembly in assemblies)
 		{
-			var attribute = type.GetCustomAttribute<HookAttribute>();
-			if (attribute == null) continue;
-
-			_cache.Add(attribute.Name, new BaseHook
+			foreach (var type in assembly.GetTypes())
 			{
-				Name = attribute.Name,
-			});
+				var attribute = type.GetCustomAttribute<HookAttribute>();
+				if (attribute == null) continue;
 
-			Debug.Log($"Installed hook: {attribute.Name}");
+				_cache.Add(attribute.Name, new BaseHook
+				{
+					Name = attribute.Name,
+				});
+
+				Debug.Log($"Installed hook: {attribute.Name}");
+			}
 		}
 	}
 
