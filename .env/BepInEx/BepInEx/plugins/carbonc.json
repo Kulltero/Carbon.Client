@@ -1,0 +1,72 @@
+{
+  "Hooks": [
+    {
+      "HookName": "OnRPCMessage",
+      "HookParameters": [
+        "__instance",
+        "player",
+        "rpc",
+        "msg"
+      ],
+      "ReturnNonNull": false,
+      "PatchType": "BaseEntity",
+      "PatchMethod": "OnRpcMessage",
+      "PatchReturnType": "System.Boolean",
+      "PatchParameters": [
+        "BasePlayer",
+        "System.UInt32",
+        "Network.Message"
+      ]
+    },
+    {
+      "HookName": "OnMenuShow",
+      "HookParameters": [
+        "MainMenuSystem.Instance"
+      ],
+      "ReturnNonNull": false,
+      "PatchType": "MainMenuSystem",
+      "PatchMethod": "Show",
+      "PatchReturnType": null,
+      "PatchParameters": []
+    },
+    {
+      "HookName": "OnMenuHide",
+      "HookParameters": [
+        "MainMenuSystem.Instance"
+      ],
+      "ReturnNonNull": false,
+      "PatchType": "MainMenuSystem",
+      "PatchMethod": "Hide",
+      "PatchReturnType": null,
+      "PatchParameters": []
+    },
+    {
+      "HookName": "OnCommandSubmit",
+      "HookParameters": [
+        "__instance",
+        "command"
+      ],
+      "ReturnNonNull": true,
+      "PatchType": "ConsoleUI",
+      "PatchMethod": "SubmitCommand",
+      "PatchReturnType": null,
+      "PatchParameters": [
+        "System.String"
+      ]
+    },
+    {
+      "HookName": "OnPlayerDisconnect",
+      "HookParameters": [
+        "__instance",
+        "str"
+      ],
+      "ReturnNonNull": true,
+      "PatchType": "Network.Client",
+      "PatchMethod": "OnDisconnected",
+      "PatchReturnType": null,
+      "PatchParameters": [
+        "System.String"
+      ]
+    }
+  ]
+}

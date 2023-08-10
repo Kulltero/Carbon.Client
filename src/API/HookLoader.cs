@@ -175,7 +175,7 @@ public class {HookName}_{Guid.NewGuid():N}
 	{{
 		{(string.IsNullOrEmpty(PatchReturnType) && !ReturnNonNull ? @$"HookCaller.CallHook(""{HookName}"", {HookParameters.ToString(", ")});" :
 		$@"
-		if (HookCaller.CallHook(""{HookName}"", {HookParameters.ToString(", ")}) {(isVoid ? "!= null" : $"is {method.ReturnType.FullName} value" )})
+		if (HookCaller.CallHook(""{HookName}"", {HookParameters.ToString(", ")}) {(isVoid ? "== null" : $"is {method.ReturnType.FullName} value" )})
 		{{{(isVoid ? "" :
 "\n			__result = value;")}
 			return true;
