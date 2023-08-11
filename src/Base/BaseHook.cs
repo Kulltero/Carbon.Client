@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -13,6 +14,7 @@ public class BaseHook : IDisposable
 	public static Dictionary<string, BaseHook> _cache = new();
 
 	public string Name { get; set; }
+	public string Category { get; set; }
 
 	public static bool Exists(string name, out BaseHook hook)
 	{
@@ -39,13 +41,17 @@ public class BaseHook : IDisposable
 		{
 			foreach (var type in assembly.GetTypes())
 			{
-				var attribute = type.GetCustomAttribute<HookAttribute>();
-				if (attribute == null) continue;
+				var hook = type.GetCustomAttribute<HookAttribute>();
+				var category = type.GetCustomAttribute<HookCategory>();
+				if (hook == null) continue;
 
-				_cache.Add(attribute.Name, new BaseHook
+				_cache.Add(hook.Name, new BaseHook
 				{
-					Name = attribute.Name,
+					Name = hook.Name,
+					Category = category.Name
 				});
+
+				Console.WriteLine($"Installed hook [{category.Name}] {hook.Name}");
 			}
 		}
 
@@ -74,7 +80,8 @@ public class BaseHook : IDisposable
 			}
 			catch (Exception ex)
 			{
-				Debug.LogError($"Failed calling hook '{Name}' {(subscriber.Info != null ? $"on {subscriber.Info?.Name}" : string.Empty)}({ex.Message})\n{ex.StackTrace}");
+				ex = (ex.InnerException ?? ex).Demystify();
+                UnityEngine.Debug.LogError($"Failed calling hook '{Name}' {(subscriber.Info != null ? $"on {subscriber.Info?.Name}" : string.Empty)}({ex.Message})\n{ex.StackTrace}");
 			}
 		}
 
@@ -86,12 +93,22 @@ public class BaseHook : IDisposable
 		if (_subscribers.Contains(plugin)) return;
 
 		_subscribers.Add(plugin);
+
+		if (plugin.Info != null)
+		{
+			Console.WriteLine($"Subscribed to '{Name}'");
+		}
 	}
 	public void Unsubscribe(CarbonClientPlugin plugin)
 	{
 		if (!_subscribers.Contains(plugin)) return;
 
 		_subscribers.Remove(plugin);
+
+		if (plugin.Info != null)
+		{
+			Console.WriteLine($"Unsubscribed from '{Name}'");
+		}
 	}
 	public void UnsubscribeAll()
 	{
@@ -110,6 +127,18 @@ public class HookAttribute : Attribute
 	public string Name { get; set; }
 
 	public HookAttribute(string name)
+	{
+		Name = name;
+	}
+}
+
+
+[AttributeUsage(AttributeTargets.Class)]
+public class HookCategory : Attribute
+{
+	public string Name { get; set; }
+
+	public HookCategory(string name)
 	{
 		Name = name;
 	}

@@ -60,7 +60,6 @@ public class Entrypoint : BasePlugin
 
 				HookLoader.Reload();
 				HookLoader.Patch();
-				BaseHook.Rebuild();
 
 				await References.Load();
 
@@ -75,9 +74,9 @@ public class Entrypoint : BasePlugin
 				{
 					_pluginType = typeof(CorePlugin)
 				};
-				CarbonClientPlugin.Plugins.Add("Core", corePlugin);
 				corePlugin.ILoad();
 				corePlugin.OnInit();
+				CarbonClientPlugin.Plugins.Add("Core", corePlugin);
 
 				Debug.Log($"Initializing compiler...");
 				IL2CPPChainloader.AddUnityComponent<Persistence>().StartCoroutine(CompilerHelper.CompileRoutine());

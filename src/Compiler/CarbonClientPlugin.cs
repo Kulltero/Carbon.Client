@@ -22,7 +22,7 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 
 	internal Dictionary<string, Func<object[], object>> _hooks = new();
 	internal Type _pluginType;
-	internal const BindingFlags _flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+	internal const BindingFlags _flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
 	public static void UnloadAll()
 	{
@@ -104,9 +104,8 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 
 			if (BaseHook.Exists(name, out var hook))
 			{
-				hook.Subscribe(this);
-
 				_hooks.Add(name, args => method.Invoke(this, args));
+				hook.Subscribe(this);
 			}
 		}
 	}

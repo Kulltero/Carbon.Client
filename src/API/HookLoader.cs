@@ -35,6 +35,7 @@ public class HookLoader
 			Debug.Log($"Loading hooks from file '{path}'");
 
 			Current = JsonConvert.DeserializeObject<Manifest>(File.ReadAllText(path));
+			Current.Setup();
 			Current.Validate();
 		}
 		catch (Exception ex)
@@ -63,20 +64,33 @@ public class HookLoader
 
 	public class Manifest
 	{
-		public Hook[] Hooks { get; set; }
+		public Dictionary<string, Hook[]> Hooks { get; set; }
 
+		public void Setup()
+		{
+			foreach (var category in Hooks)
+			{
+				foreach (var hook in category.Value)
+				{
+					hook.Setup(category.Key);
+				}
+			}
+		}
 		public void Validate()
 		{
 			var failCount = 0;
-			foreach(var hook in Hooks)
+			foreach(var category in Hooks)
 			{
-				if (!hook.Validate())
+				foreach(var hook in category.Value)
 				{
-					failCount++;
+					if (!hook.Validate())
+					{
+						failCount++;
+					}
 				}
 			}
 
-			Debug.LogWarning($"Hook manifest report: {failCount} / {Hooks.Length} failed");
+			Debug.LogWarning($"Hook manifest report: {failCount} / {Hooks.Sum(x => x.Value.Length)} failed");
 		}
 
 		public string CreatePatch()
@@ -89,9 +103,14 @@ using HarmonyLib;
 
 ";
 
-			foreach(var hook in Hooks)
+			foreach(var category in Hooks)
 			{
-				patch += $"{hook.CreatePatch()}{doubleSpace}";
+				foreach(var hook in category.Value)
+				{
+					if (!hook.Validate()) continue;
+
+					patch += $"{hook.CreatePatch()}{doubleSpace}";
+				}
 			}
 
 			return patch;
@@ -118,10 +137,17 @@ using HarmonyLib;
 			public bool IsInvalid { get; set; }
 
 			[JsonIgnore]
+			public string Category { get; set; }
+
+			[JsonIgnore]
 			public bool IsPostfix => string.IsNullOrEmpty(PatchReturnType);
 
 			internal Harmony _patch;
 
+			public void Setup(string category)
+			{
+				Category = category;	
+			}
 			public bool Validate()
 			{
 				var passed = true;
@@ -147,6 +173,7 @@ using HarmonyLib;
 				IsInvalid = !passed;
 				return passed;
 			}
+
 			public string CreatePatch()
 			{
 				if (!Validate()) return null;
@@ -167,16 +194,25 @@ using HarmonyLib;
 					return null;
 				}
 
-				var parameters = method.GetParameters().Select(x => $"{x.ParameterType.FullName} {x.Name}").ToString(", ");
-				if (!method.IsStatic) parameters += $", {type.FullName} __instance";
-				if (method.ReturnType != typeof(void)) parameters += $", ref {method.ReturnType.FullName} __result";
+				var parameterList = new List<string>();
+				var parameterTypes = method.GetParameters();
 
+				var parameterTypesString = parameterTypes.Select(x => $"{x.ParameterType.FullName} {x.Name}").ToString(", ");
+				if(!string.IsNullOrEmpty(parameterTypesString)) parameterList.Add(parameterTypesString);
+
+				if (!method.IsStatic) parameterList.Add($"{type.FullName} __instance");
+				if (method.ReturnType != typeof(void)) parameterList.Add($"ref {method.ReturnType.FullName} __result");
+
+				var parameters = parameterList.ToString(", ");
+				parameterList.Clear();
+				parameterList = null;
 				var isVoid = method.ReturnType == typeof(void);
 
 				return @$"
 [HarmonyPatch(typeof({type.FullName}), ""{PatchMethod}"", new Type[] {{ {types.Select(x => $"typeof({x.FullName})").ToString(", ")} }})]
 [Hook(""{HookName}"")]
-public class {HookName}_{Guid.NewGuid():N}
+[HookCategory(""{Category}"")]
+public class {Category}_{HookName}_{Guid.NewGuid():N}
 {{
 	public static {(method.ReturnType == typeof(void) && !ReturnNonNull ? "void" : "bool")} {(IsPostfix && !ReturnNonNull ? "Postfix" : "Prefix")}({parameters})
 	{{
