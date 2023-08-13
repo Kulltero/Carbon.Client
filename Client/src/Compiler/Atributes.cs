@@ -33,3 +33,17 @@ public class CommandAttribute : Attribute
 		Name = name;
 	}
 }
+[AttributeUsage(AttributeTargets.Method)]
+public class ClientRPCAttribute : Attribute
+{
+    public string Name { get; set; }
+
+    public ClientRPCAttribute()
+    {
+    }
+
+    public ClientRPCAttribute(string name)
+    {
+        Name = CompilerHelper.FormatName(name);
+    }
+}
