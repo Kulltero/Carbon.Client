@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Carbon.Client;
 
-public class CarbonCommunityEntity : BaseEntity
+public class CarbonCommunityEntity : BaseNetworkable
 {
 	public const string PrefabName = "assets/testentity.prefab";
 	public static uint PrefabId;
@@ -24,8 +24,7 @@ public class CarbonCommunityEntity : BaseEntity
 
 	public void Awake()
 	{
-		Singleton = this;
-		Debug.Log($"Spawned! {this}");
+		Singleton = this; 
 	}
 
 	public override bool OnRpcMessage(BasePlayer player, uint rpc, Message msg)

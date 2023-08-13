@@ -5,6 +5,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Carbon.Client.API;
+using HarmonyLib;
+using Network.Visibility;
 using UnityEngine;
 
 namespace Carbon.Client.Base;
@@ -13,6 +16,7 @@ public class BaseHook : IDisposable
 {
 	public static Dictionary<string, BaseHook> _cache = new();
 
+	public string Id { get; set; }
 	public string Name { get; set; }
 	public string Category { get; set; }
 
@@ -47,8 +51,12 @@ public class BaseHook : IDisposable
 
 				_cache.Add(hook.Name, new BaseHook
 				{
+					Id = type.Name.Split('_')[2],
 					Name = hook.Name,
-					Category = category.Name
+					Category = category.Name,
+					_type = type,
+					_hook = hook,
+					_harmony = type.GetCustomAttribute<HarmonyPatch>()
 				});
 
 				Console.WriteLine($"Installed hook [{category.Name}] {hook.Name}");
@@ -62,12 +70,23 @@ public class BaseHook : IDisposable
 	}
 
 	internal List<CarbonClientPlugin> _subscribers = new();
+	internal Harmony _patch;
+	internal Type _type;
+	internal HarmonyPatch _harmony;
+	internal HookAttribute _hook;
+	internal const string _prefix = "Prefix";
+	internal const string _postfix = "Postfix";
+	internal const BindingFlags _flags = BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic;
+	internal static List<CarbonClientPlugin> _pluginBuffer = new();
 
 	public object Call(object[] args)
 	{
 		var result = (object)null;
 
-		foreach (var subscriber in _subscribers)
+		_pluginBuffer.Clear();
+		_pluginBuffer.AddRange(_subscribers);
+
+		foreach (var subscriber in _pluginBuffer)
 		{
 			try
 			{
@@ -88,6 +107,39 @@ public class BaseHook : IDisposable
 		return result;
 	}
 
+	public void Patch()
+	{
+		if (_patch != null) return;
+
+		_patch = new Harmony($"com.carbon.client_hooks.{Guid.NewGuid():N}");
+
+		try
+		{
+			var prefixMethod = _type.GetMethod(_prefix, _flags);
+			var postfixMethod = _type.GetMethod(_postfix, _flags);
+
+			var prefix = (HarmonyMethod)null;
+			var postfix = (HarmonyMethod)null;
+
+			if (prefixMethod != null) prefix = new HarmonyMethod(prefixMethod);
+			if (postfixMethod != null) postfix = new HarmonyMethod(postfixMethod);
+
+			_patch.Patch(_harmony.info.declaringType.GetMethod(_harmony.info.methodName, _flags, _harmony.info.argumentTypes), prefix, postfix, null);
+            UnityEngine.Debug.Log($"Patched hook '{Name}' ({_harmony.info.declaringType.FullName}.{_harmony.info.methodName})");
+		}
+		catch (Exception ex)
+		{
+            UnityEngine.Debug.LogWarning($"Failed patching hook '{Name}': {_type.Name} ({ex.Message})\n{ex.StackTrace}");
+		}
+	}
+	public void Unpatch()
+	{
+		if (_patch == null) return;
+
+		_patch.UnpatchSelf();
+		_patch = null;
+	}
+
 	public void Subscribe(CarbonClientPlugin plugin)
 	{
 		if (_subscribers.Contains(plugin)) return;
@@ -98,6 +150,8 @@ public class BaseHook : IDisposable
 		{
 			Console.WriteLine($"Subscribed to '{Name}'");
 		}
+
+		Patch();
 	}
 	public void Unsubscribe(CarbonClientPlugin plugin)
 	{
@@ -109,15 +163,23 @@ public class BaseHook : IDisposable
 		{
 			Console.WriteLine($"Unsubscribed from '{Name}'");
 		}
+
+		if(_subscribers.Count == 0)
+		{
+			Unpatch();
+		}
 	}
 	public void UnsubscribeAll()
 	{
 		_subscribers.Clear();
+		_subscribers = null;
+
+		Unpatch();
 	}
 
 	public void Dispose()
 	{
-
+		UnsubscribeAll();
 	}
 }
 

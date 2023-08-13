@@ -2,20 +2,24 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using Carbon.Extensions;
 using HarmonyLib;
-using Il2CppInterop.Runtime.Injection;
+using Il2CppSystem.IO;
+using Il2CppSystem.Net;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Carbon.Client.API;
 
 public class HookLoader
 {
-	public static Harmony CurrentPatch { get; internal set; }
+	public static Manifest CurrentManifest { get; internal set; }
 
-	public static Manifest Current { get; internal set; }
+	public const string HookUrl = "https://raw.githubusercontent.com/CarbonCommunity/Carbon.Redist/main/Client/hooks.json";
+	public static string CurrentHookSource;
 
 	public static Type FindType(string type)
 	{
@@ -24,23 +28,30 @@ public class HookLoader
 
 	public static string GetHookFile()
 	{
-		return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "BepInEx", "plugins", "carbonc.json"));
+		return System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "..", "BepInEx", "plugins", "carbonc.json"));
+	}
+
+	public static void UpdateHooks()
+	{
+		Debug.LogWarning($"Downloading hooks from '{HookUrl}'");
+		CurrentHookSource = new Il2CppSystem.Net.WebClient().DownloadString(HookUrl);
+		Console.WriteLine($"Done.");
 	}
 
 	public static void Reload()
 	{
-		var path = GetHookFile();
 		try
 		{
-			Debug.Log($"Loading hooks from file '{path}'");
+			UpdateHooks();
 
-			Current = JsonConvert.DeserializeObject<Manifest>(File.ReadAllText(path));
-			Current.Setup();
-			Current.Validate();
+			Debug.Log($"Loading hooks");
+			CurrentManifest = JsonConvert.DeserializeObject<Manifest>(CurrentHookSource);
+			CurrentManifest.Setup();
+			CurrentManifest.Validate();
 		}
 		catch (Exception ex)
 		{
-			Debug.LogError($"Failed loading hooks from file '{path}' ({ex.Message}\n{ex.StackTrace}");
+			Debug.LogError($"Failed loading hooks from URL '{HookUrl}' ({ex.Message}\n{ex.StackTrace}");
 		}
 	}
 
@@ -48,7 +59,7 @@ public class HookLoader
 	{
 		var thread = new CarbonHookCompilation()
 		{
-			Source = Current.CreatePatch(),
+			Source = CurrentManifest.CreatePatch(),
 			FileName = Guid.NewGuid().ToString("N"),
 			FilePath = string.Empty,
 			Hash = string.Empty
@@ -56,15 +67,9 @@ public class HookLoader
 		thread.Start();
 	}
 
-	public static void Save()
-	{
-		var path = GetHookFile();
-		File.WriteAllText(path, JsonConvert.SerializeObject(Current, Formatting.Indented));
-	}
-
 	public class Manifest
 	{
-		public Dictionary<string, Hook[]> Hooks { get; set; }
+		public Dictionary<string, List<Hook>> Hooks { get; set; }
 
 		public void Setup()
 		{
@@ -90,10 +95,10 @@ public class HookLoader
 				}
 			}
 
-			Debug.LogWarning($"Hook manifest report: {failCount} / {Hooks.Sum(x => x.Value.Length)} failed");
+			Debug.LogWarning($"Hook manifest report: {failCount} / {Hooks.Sum(x => x.Value.Count)} failed");
 		}
 
-		public string CreatePatch()
+		public string CreatePatch(bool validate = true)
 		{
 			const string doubleSpace = "\n\n";
 			var patch = @$"using System;
@@ -107,7 +112,7 @@ using HarmonyLib;
 			{
 				foreach(var hook in category.Value)
 				{
-					if (!hook.Validate()) continue;
+					if (validate && !hook.Validate()) continue;
 
 					patch += $"{hook.CreatePatch()}{doubleSpace}";
 				}
@@ -176,8 +181,6 @@ using HarmonyLib;
 
 			public string CreatePatch()
 			{
-				if (!Validate()) return null;
-
 				var type = FindType(PatchType);
 				if (type == null)
 				{
