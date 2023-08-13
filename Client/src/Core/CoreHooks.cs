@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using Carbon.Client.API;
+using Network;
 using UnityEngine;
 
 namespace Carbon.Client.Core;
@@ -61,4 +62,12 @@ public partial class CorePlugin : CarbonClientPlugin
 
 		return null;
 	}
+
+    private object OnRPCMessage(BaseEntity entity, BasePlayer player, uint rpc, Message msg)
+    {
+		if (RPCCaller.CallRPC(entity, player, rpc, msg))
+			return true;
+
+		return null;
+    }
 }

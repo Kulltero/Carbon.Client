@@ -69,11 +69,13 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 	internal void ILoad()
 	{
 		IRefreshHooks();
+		IRegisterRPC();
 		ICommandInstall();
 	}
 	internal void IUnload(bool clear = false)
 	{
 		CommandLoader.UnregisterType(this);
+		RPCLoader.UnregisterPlugin(this);
 		BaseHook.UnsubscribePlugin(this);
 
 		Console.WriteLine($"Unloaded plugin {Info.Name}");
@@ -112,5 +114,9 @@ public abstract class CarbonClientPlugin : FacepunchBehaviour
 	internal void ICommandInstall()
 	{
 		CommandLoader.RegisterType(_pluginType, this);
-	}
+    }
+    internal void IRegisterRPC()
+    {
+		RPCLoader.RegisterPlugin(this);
+    }
 }
