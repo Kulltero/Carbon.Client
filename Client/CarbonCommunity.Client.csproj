@@ -2,7 +2,8 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net48</TargetFramework>
+		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -31,4 +32,9 @@
 		<Reference Include="..\..\..\..\..\Software\Steam\steamapps\common\RustStaging\BepInEx\core\*.dll" />
 		<Reference Include="..\..\..\..\..\Software\Steam\steamapps\common\RustStaging\BepInEx\interop\*.dll" />
 	</ItemGroup>
+  <ItemGroup>
+    <Reference Include="Carbon.Common">
+      <HintPath>.env\Carbon\Carbon.Core\Carbon.Common\bin\Debug\Carbon.Common.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

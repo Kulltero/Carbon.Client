@@ -25,4 +25,23 @@ public partial class CorePlugin : CarbonClientPlugin
 		HookLoader.Reload();
 		HookLoader.Patch();
 	}
+
+	[Command("c.hookup")]
+	private string Hookup(Arg args)
+	{
+		var result = string.Empty;
+		var filter = args.GetString(0);
+
+		foreach (var category in HookLoader.CurrentManifest.Hooks)
+		{
+			foreach (var hook in category.Value)
+			{
+				if (hook.HookName.Contains(filter))
+				{
+					result += $"[{category.Key}] {hook.HookName} ({hook.MetadataParameters.ToString(", ")})\n{hook.MetadataDescription.Select(x => $" - {x}").ToString("\n")}\n - Patches {hook.PatchType}.{hook.PatchMethod}\n";
+				}
+			}
+		}
+		return result;
+	}
 }

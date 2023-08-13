@@ -124,7 +124,7 @@ public class BaseHook : IDisposable
 			if (prefixMethod != null) prefix = new HarmonyMethod(prefixMethod);
 			if (postfixMethod != null) postfix = new HarmonyMethod(postfixMethod);
 
-			_patch.Patch(_harmony.info.declaringType.GetMethod(_harmony.info.methodName, _flags, _harmony.info.argumentTypes), prefix, postfix, null);
+			_patch.Patch(_harmony.info.declaringType.GetMethod(_harmony.info.methodName, _flags, null, _harmony.info.argumentTypes, null), prefix, postfix, null);
             UnityEngine.Debug.Log($"Patched hook '{Name}' ({_harmony.info.declaringType.FullName}.{_harmony.info.methodName})");
 		}
 		catch (Exception ex)

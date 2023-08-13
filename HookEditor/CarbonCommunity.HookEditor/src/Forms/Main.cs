@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Carbon.Extensions;
 using CarbonCommunity.HookEditor.src.Forms;
 using Newtonsoft.Json;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
@@ -65,7 +66,7 @@ namespace CarbonCommunity.HookEditor
 
 				foreach (var hook in category.Value)
 				{
-					var hookNode = group.Nodes.Add($"{hook.HookName} [{hook.PatchType}.{hook.PatchMethod}]");
+					var hookNode = group.Nodes.Add($"{hook.HookName} — [{hook.PatchType}.{hook.PatchMethod}]");
 					hookNode.Tag = new { hook, category.Key };
 				}
 			}

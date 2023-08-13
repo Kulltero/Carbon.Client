@@ -138,6 +138,9 @@ using HarmonyLib;
 			public string PatchReturnType { get; set; }
 			public string[] PatchParameters { get; set; }
 
+			public string[] MetadataDescription { get; set; }
+			public string[] MetadataParameters { get; set; }
+
 			[JsonIgnore]
 			public bool IsInvalid { get; set; }
 
@@ -189,7 +192,7 @@ using HarmonyLib;
 				}
 
 				var types = PatchParameters.Select(x => FindType(x)).ToArray();
-				var method = type.GetMethod(PatchMethod, _flags, types);
+				var method = type.GetMethod(PatchMethod, _flags, null, types, null);
 				if (method == null)
 				{
 					Debug.LogError($"[{HookName}] Failed patching: patch type method '{PatchMethod}' can't be found");

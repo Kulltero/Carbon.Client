@@ -116,7 +116,7 @@ public class RPCLoader
                         instance = plugin;
                     }
                     result = method.Invoke(instance, args);
-                    Array.Clear(args);
+                    Array.Clear(args, 0, args.Length);
                     return (result is bool bResult ? bResult : false);
                 }
             });
