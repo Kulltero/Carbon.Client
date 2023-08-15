@@ -38,6 +38,7 @@ public class Entrypoint : BasePlugin
 	internal static bool _hasInit;
 	internal static string _home = Path.Combine(Application.dataPath, "..");
 	internal static bool _serverConnected;
+	internal static Persistence _persistence;
 
 	public override void Load()
 	{
@@ -88,7 +89,8 @@ public class Entrypoint : BasePlugin
 				CarbonClientPlugin.Plugins.Add("Core", corePlugin);
 
 				UnityEngine.Debug.Log($"Initializing compiler...");
-				IL2CPPChainloader.AddUnityComponent<Persistence>().StartCoroutine(CompilerHelper.CompileRoutine());
+				_persistence = IL2CPPChainloader.AddUnityComponent<Persistence>();
+				_persistence.StartCoroutine(CompilerHelper.CompileRoutine());
 			}
 			catch (Exception ex)
 			{
@@ -156,12 +158,12 @@ public class Entrypoint : BasePlugin
 	[RPC.Method("ping")]
 	private static void Ping(BasePlayer player, Network.Message message)
 	{
+		_serverConnected = true;
+
 		var result = Receive<RPCList>(message);
 		result.Sync();
 
 		Send(RPC.Get("pong"), RPCList.Get());
-
-		_serverConnected = true;
 	}
 
 	[RPC.Method("clientinfo")]

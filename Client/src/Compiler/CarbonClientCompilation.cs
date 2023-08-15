@@ -32,13 +32,17 @@ public class CompileThread : BaseThreadedJob
 
 	public Assembly Assembly { get; set; }
 
-	private static List<MetadataReference> references = new();
-	private static bool initedReferences;
+	private static List<MetadataReference> _references = new();
+	private static bool _initedReferences;
+	private static string[] _filters = new string[]
+	{
+		"Carbon.SDK"
+	};
 
 	public static void CheckReferences()
 	{
-		if (initedReferences) return;
-		initedReferences = true;
+		if (_initedReferences) return;
+		_initedReferences = true;
 
 		var loadedHarmony0 = false;
 
@@ -53,7 +57,12 @@ public class CompileThread : BaseThreadedJob
 
 			foreach (var file in Directory.GetFiles(folder, "*.dll"))
 			{
-				if (file.Contains("dobby") || references.Any(x =>
+				if (_filters.Any(x => file.Contains(x)))
+				{
+					continue;
+				}
+
+				if (file.Contains("dobby") || _references.Any(x =>
 				{
 					return Path.GetFileNameWithoutExtension(file.ToLower()) == Path.GetFileNameWithoutExtension(x.Display.ToLower());
 				})) continue;
@@ -71,7 +80,7 @@ public class CompileThread : BaseThreadedJob
 					using (var stream = new MemoryStream(source))
 					{
 						var reference = MetadataReference.CreateFromStream(stream, filePath: file);
-						references.Add(reference);
+						_references.Add(reference);
 						Debug.Log($"Loading reference: {Path.GetFileName(reference.Display)}");
 					}
 
@@ -105,7 +114,7 @@ public class CompileThread : BaseThreadedJob
 				optimizationLevel: OptimizationLevel.Release,
 				deterministic: true, warningLevel: 4);
 			var compilation = CSharpCompilation.Create(
-				$"Script.{FileName}.{Guid.NewGuid():N}", trees, references, options);
+				$"Script.{FileName}.{Guid.NewGuid():N}", trees, _references, options);
 
 			using (var dllStream = new MemoryStream())
 			{
