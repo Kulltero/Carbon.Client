@@ -63,6 +63,7 @@ public class Entrypoint : BasePlugin
 		{
 			if (_hasInit) return;
 			_hasInit = true;
+
 			try
 			{
 				UnityEngine.Debug.Log($"Booting Carbon client...");
@@ -72,13 +73,6 @@ public class Entrypoint : BasePlugin
 				HookLoader.Patch();
 
 				await References.Load();
-
-				// CarbonCommunityEntity.Init();
-				// 
-				// var ent = new GameObject(CarbonCommunityEntity.PrefabName).AddComponent(Il2CppInterop.Runtime.Il2CppType.From(typeof(CarbonCommunityEntity))).Cast<CarbonCommunityEntity>();
-				// ent.prefabID = CarbonCommunityEntity.PrefabId;
-				// ent._prefabName = CarbonCommunityEntity.PrefabName;
-				// if (!FileSystem.Backend.cache.ContainsKey(CarbonCommunityEntity.PrefabName)) FileSystem.Backend.cache.Add(CarbonCommunityEntity.PrefabName, ent.gameObject);
 
 				var corePlugin = new CorePlugin()
 				{
@@ -105,7 +99,6 @@ public class Entrypoint : BasePlugin
 		private static bool Prefix(BasePlayer player, uint rpc, Message msg, CommunityEntity __instance, ref bool __result)
 		{
 			var rpcVal = RPC.Get(rpc);
-			Console.WriteLine($"{player} {rpc} {rpcVal.Name} {msg} {__instance}");
 
 			if (RPC.HandleRPCMessage(player, rpc, msg) is bool value)
 			{
