@@ -21,8 +21,8 @@ namespace Carbon.Client
 			var references = new List<string>();
 			var loadedHarmony0 = false;
 
-			LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "system-libs"));
-			LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "unity-libs"));
+			LoadFolder(Path.Combine(Entrypoint._home, "BepInEx", "system-libs"));
+			LoadFolder(Path.Combine(Entrypoint._home, "BepInEx", "unity-libs"));
 			// LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "plugins"));
 			// LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "core"));
 			// LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "interop"));

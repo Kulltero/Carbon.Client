@@ -42,10 +42,10 @@ public class CompileThread : BaseThreadedJob
 
 		var loadedHarmony0 = false;
 
-		LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "system-libs"));
-		LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "plugins"));
-		LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "core"));
-		LoadFolder(Path.Combine(Entrypoint.Home, "BepInEx", "interop"));
+		LoadFolder(Path.Combine(Entrypoint._home, "BepInEx", "system-libs"));
+		LoadFolder(Path.Combine(Entrypoint._home, "BepInEx", "plugins"));
+		LoadFolder(Path.Combine(Entrypoint._home, "BepInEx", "core"));
+		LoadFolder(Path.Combine(Entrypoint._home, "BepInEx", "interop"));
 
 		void LoadFolder(string folder)
 		{

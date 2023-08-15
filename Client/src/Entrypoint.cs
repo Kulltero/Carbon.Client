@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using BepInEx;
@@ -6,14 +7,15 @@ using BepInEx.Unity.IL2CPP;
 using BepInEx.Unity.IL2CPP.Utils;
 using Carbon.Client;
 using Carbon.Client.API;
-using Carbon.Client.Base;
+using Carbon.Client.Contracts;
 using Carbon.Client.Core;
 using Carbon.Client.Packets;
 using HarmonyLib;
-using Il2CppSystem.Runtime.Remoting;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Network;
+using Newtonsoft.Json;
+using ProtoBuf;
 using UnityEngine;
-using static Carbon.Client.RPC;
 
 /*
  *
@@ -34,7 +36,8 @@ public class Entrypoint : BasePlugin
 	public static Entrypoint Singleton { get; internal set; }
 
 	internal static bool _hasInit;
-	internal static string Home = Path.Combine(Application.dataPath, "..");
+	internal static string _home = Path.Combine(Application.dataPath, "..");
+	internal static bool _serverConnected;
 
 	public override void Load()
 	{
@@ -61,7 +64,7 @@ public class Entrypoint : BasePlugin
 			_hasInit = true;
 			try
 			{
-				Debug.Log($"Booting Carbon client...");
+				UnityEngine.Debug.Log($"Booting Carbon client...");
 
 				RPC.Init(typeof(RPC), typeof(Entrypoint));
 				HookLoader.Reload();
@@ -69,7 +72,7 @@ public class Entrypoint : BasePlugin
 
 				await References.Load();
 
-  				// CarbonCommunityEntity.Init();
+				// CarbonCommunityEntity.Init();
 				// 
 				// var ent = new GameObject(CarbonCommunityEntity.PrefabName).AddComponent(Il2CppInterop.Runtime.Il2CppType.From(typeof(CarbonCommunityEntity))).Cast<CarbonCommunityEntity>();
 				// ent.prefabID = CarbonCommunityEntity.PrefabId;
@@ -84,17 +87,17 @@ public class Entrypoint : BasePlugin
 				corePlugin.OnInit();
 				CarbonClientPlugin.Plugins.Add("Core", corePlugin);
 
-				Debug.Log($"Initializing compiler...");
+				UnityEngine.Debug.Log($"Initializing compiler...");
 				IL2CPPChainloader.AddUnityComponent<Persistence>().StartCoroutine(CompilerHelper.CompileRoutine());
 			}
 			catch (Exception ex)
 			{
-				Debug.LogError($"Failed CarbonCommunityEntity init ({ex.Message})\n{ex.StackTrace}");
+				UnityEngine.Debug.LogError($"Failed CarbonCommunityEntity init ({ex.Message})\n{ex.StackTrace}");
 			}
 		}
 	}
 
-	[HarmonyPatch( typeof(CommunityEntity), "OnRpcMessage", new System.Type[] { typeof(BasePlayer), typeof(uint), typeof(Message) })]
+	[HarmonyPatch(typeof(CommunityEntity), "OnRpcMessage", new System.Type[] { typeof(BasePlayer), typeof(uint), typeof(Message) })]
 	public class CommunityEntityPatch
 	{
 		private static bool Prefix(BasePlayer player, uint rpc, Message msg, CommunityEntity __instance, ref bool __result)
@@ -111,16 +114,63 @@ public class Entrypoint : BasePlugin
 		}
 	}
 
-	[Method("ping")]
+	public static bool Send<T>(RPC rpc, T packet) where T : IPacket
+	{
+		if (!_serverConnected) return false;
+
+		try
+		{
+			CommunityEntity.ClientInstance.ServerRPC(rpc.Name, JsonConvert.SerializeObject(packet.Serialize()));
+			// return true;
+			// 
+			// var write = Net.cl.StartWrite();
+			// write.PacketID(Message.Type.RPCMessage);
+			// write.EntityID(CommunityEntity.ClientInstance.net.ID);
+			// write.UInt32(rpc.Id);
+			// write.BytesWithSize(packet.Serialize());
+			// write.Send(new SendInfo(Net.cl.Connection)
+			// {
+			// 	priority = Network.Priority.Immediate
+			// });
+		}
+		catch (Exception ex)
+		{
+			ex = ex.Demystify();
+			UnityEngine.Debug.LogError($"Failed sending server RPC ({ex.Message})\n{ex.StackTrace}");
+			return false;
+		}
+
+		return true;
+	}
+	public static T Receive<T>(Network.Message message)
+	{
+		using var ms = new MemoryStream(JsonConvert.DeserializeObject<byte[]>(message.read.StringRaw()));
+		var array = ms.ToArray();
+		return Serializer.Deserialize<T>(new ReadOnlySpan<byte>(array, 0, array.Length));
+
+		// using var ms = new MemoryStream(JsonConvert.DeserializeObject<byte[]>(message.read.StringRaw()));
+		// return Serializer.Deserialize<T>(new ReadOnlySpan<byte>(ms.ToArray()));
+	}
+
+
+	[RPC.Method("ping")]
 	private static void Ping(BasePlayer player, Network.Message message)
 	{
-		var packet = new ServerRPCList
-		{
-			RpcNames = rpcList.Select(x => x.Name).ToArray()
-		};
+		var result = Receive<RPCList>(message);
+		result.Sync();
 
-		var rpc = Get("pong");
-		Console.WriteLine($"{rpc.Name} {rpc.Id} {packet.RpcNames.Length}");
-		CommunityEntity.ClientInstance.ServerRPC(SendMethod.Reliable, rpc.Name);
+		Send(RPC.Get("pong"), RPCList.Get());
+
+		_serverConnected = true;
+	}
+
+	[RPC.Method("clientinfo")]
+	private static void ClientInfo(BasePlayer player, Network.Message message)
+	{
+		Send(RPC.Get("clientinfo"), new ClientInfo()
+		{
+			ScreenWidth = Screen.width,
+			ScreenHeight = Screen.height
+		});
 	}
 }

@@ -1,6 +1,6 @@
 ﻿namespace Carbon.Client.Core;
 
-[Info("Core")]
+[@Info("Core")]
 public partial class CorePlugin : CarbonClientPlugin
 {
 	public override void OnInit()
